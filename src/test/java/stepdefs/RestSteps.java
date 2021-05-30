@@ -94,6 +94,6 @@ public class RestSteps {
     public void theResponseStatusIs(int responseCode) {
         System.out.println("\nRunning step: the response status is " + responseCode);
         Response response = (Response)Context.getContextValue(ContextKeys.CURRENT_RESPONSE);
-        Assert.assertEquals(response.statusCode(), responseCode);
+        Assert.assertEquals(responseCode, response.statusCode());
     }
 }
