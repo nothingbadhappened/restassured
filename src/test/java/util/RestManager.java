@@ -43,10 +43,12 @@ public class RestManager {
 
     public void makeRequest(String method, String endpoint, String jsonString){
         endpoint = endpoint.toUpperCase();
+        setAuthToken();
 
         System.out.println("Performing request with the following json body: " + jsonString);
         requestSpecification = given()
                 .header("Content-Type", "application/json")
+                .header("Authorization", Context.getContextValue(ContextKeys.AUTH_TOKEN).toString())
                 .baseUri(Context.getContextValue(ContextKeys.BASE_URL).toString())
                 .body(jsonString);
         response = sendRequestAndGetResponse(method, endpoint);
@@ -54,7 +56,10 @@ public class RestManager {
 
     public void makeRequest(String method, String endpoint){
         endpoint = endpoint.toUpperCase();
+        setAuthToken();
+
         requestSpecification = given()
+                .header("Authorization", Context.getContextValue(ContextKeys.AUTH_TOKEN).toString())
                 .baseUri(Context.getContextValue(ContextKeys.BASE_URL).toString());
         response = sendRequestAndGetResponse(method, endpoint);
     }
@@ -70,6 +75,12 @@ public class RestManager {
             default:
                 System.out.printf("Unknown HTTP method [%s], please check", method);
                 return null;
+        }
+    }
+
+    private void setAuthToken(){
+        if (Context.getContextValue(ContextKeys.AUTH_TOKEN)==null){
+            Context.setContext(ContextKeys.AUTH_TOKEN, "DEFAULT_TOKEN");
         }
     }
 }

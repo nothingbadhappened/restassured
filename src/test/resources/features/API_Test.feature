@@ -15,4 +15,3 @@ Feature: API TEST SANDBOX
     | method        |  endpoint       |  requestBody    | responseCode |
     | GET           |  USERS          |  EMPTY          | 200          |
     | GET           |  users/23       |  EMPTY          | 404          |
-    | POST          |  LOGIN          |  login.json     | 200          |
