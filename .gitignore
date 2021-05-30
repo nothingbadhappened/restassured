@@ -1,4 +1,5 @@
 .idea/
 target/
+results/
 .DS_Store
 restassured.iml
