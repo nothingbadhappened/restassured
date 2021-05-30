@@ -25,8 +25,7 @@ public class RestSteps {
     public void theUserGetsTheAuthToken() {
         System.out.println("\nRunning step: the user gets the auth token");
         RestManager restManager = new RestManager();
-//        Response response = restManager.getResponse("POST", "/login",
-//                JsonReader.getJsonStringFrom("login.json"));
+
         restManager.makeRequest("POST", "/login",
                 JsonReader.getJsonStringFrom("login.json"));
         Response response = restManager.getStoredResponse();
