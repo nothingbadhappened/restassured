@@ -1,99 +1,81 @@
 package stepdefs;
 
-import util.Context;
-import util.ContextKeys;
-import util.JsonReader;
-import util.RestManager;
+import enums.Endpoint;
+import enums.HttpMethod;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.restassured.response.Response;
-import org.junit.Assert;
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
+import util.Context;
+import enums.ContextKey;
+import util.JsonUtil;
+import util.RestManager;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.*;
+
+@Log4j2
+@AllArgsConstructor
 public class RestSteps {
+    private RestManager restManager;
+
     @Given("the user sets the base API URL to {string}")
     public void theUserSetsTheBaseAPIURL(String baseAPIURL) {
-        System.out.printf("\nRunning step: the user sets the base API URL to [%s]\n", baseAPIURL);
-        Context.setContext(ContextKeys.BASE_URL, baseAPIURL);
-        System.out.printf("Context updated: [key:%s, value:%s]\n",
-                ContextKeys.BASE_URL, Context.getContextValue(ContextKeys.BASE_URL));
+        log.info("Running step: the user sets the base API URL to " + baseAPIURL);
+        Context.setContext(ContextKey.BASE_URL, baseAPIURL);
+        log.debug("Context updated: [key: " + ContextKey.BASE_URL
+                + "value: " + Context.getContextValue(ContextKey.BASE_URL) + "]");
     }
 
     @And("the user gets the auth token")
     public void theUserGetsTheAuthToken() {
-        System.out.println("\nRunning step: the user gets the auth token");
-        RestManager restManager = new RestManager();
+        log.info("Running step: the user gets the auth token");
 
-        restManager.makeRequest("POST", "/login",
-                JsonReader.getJsonStringFrom("login.json"));
+        restManager.makeRequest(HttpMethod.POST, Endpoint.LOGIN, null,
+                JsonUtil.getJsonFileByName("login.json"));
+        restManager.saveRequestResponseContext();
         Response response = restManager.getStoredResponse();
 
-        System.out.println(" >>>>>>>> Request data:");
-        restManager.printStoredRequest();
-        System.out.println(" <<<<<<<< Response data:");
-        restManager.printStoredResponse();
+        log.debug(" >>>>>>>> Request data:\n" + restManager.getRequestDataString());
+        log.debug(" <<<<<<<< Response data:\n" + restManager.getResponseDataString());
 
         String authtoken = response.jsonPath().getString("token");
-        System.out.printf("Auth token obtained: [%s]\n", authtoken);
+        log.debug("Auth token obtained: " + authtoken);
 
-        Context.setContext(ContextKeys.CURRENT_RESPONSE, response);
-        System.out.printf("Context updated: [key:%s, value:%s]\n",
-                ContextKeys.CURRENT_RESPONSE, Context.getContextValue(ContextKeys.CURRENT_RESPONSE));
-
-        Context.setContext(ContextKeys.AUTH_TOKEN, authtoken);
-        System.out.printf("Context updated: [key:%s, value:%s]\n",
-                ContextKeys.AUTH_TOKEN, Context.getContextValue(ContextKeys.AUTH_TOKEN));
+        Context.setContext(ContextKey.AUTH_TOKEN, authtoken);
+        log.debug("Context updated: [key: " + ContextKey.AUTH_TOKEN + "]"
+                + " value: [" + Context.getContextValue(ContextKey.AUTH_TOKEN) + "]");
     }
 
     @Given("the user sends the request with the following data:")
-    public void theUserCreatesTheRequestWithTheFollowingData(Map<String, String> requestData) {
-        System.out.println("\nRunning step: the user sends the request with the following data:");
-        requestData.forEach((k, v) -> System.out.println(k + ": " + v));
-        RestManager restManager = new RestManager();
-        if(requestData.get("requestBody").equalsIgnoreCase("empty")){
+    public void theUserSendsTheRequestWithTheFollowingData(Map<String, String> requestData) {
+        log.info("Running step: the user sends the request with the following data:" + requestData.toString());
+        String identifier = requestData.get("id") == null ? "" : "/" + requestData.get("id");
+
+        if (requestData.get("requestBody") == null) {
             restManager.makeRequest(
-                    requestData.get("method"),
-                    requestData.get("endpoint")
-            );
-            Context.setContext(ContextKeys.CURRENT_REQUEST, restManager.getStoredRequest());
-            System.out.printf("Context updated: [key:%s, value:%s]\n",
-                    ContextKeys.CURRENT_REQUEST, Context.getContextValue(ContextKeys.CURRENT_REQUEST));
-
-            Context.setContext(ContextKeys.CURRENT_RESPONSE, restManager.getStoredResponse());
-            System.out.printf("Context updated: [key:%s, value:%s]\n",
-                    ContextKeys.CURRENT_RESPONSE, Context.getContextValue(ContextKeys.CURRENT_RESPONSE));
-
-            System.out.println(" >>>>>>>> Request data:");
-            restManager.printStoredRequest();
-            System.out.println(" <<<<<<<< Response data:");
-            restManager.printStoredResponse();
+                    HttpMethod.valueOf(requestData.get("method")),
+                    Endpoint.valueOf(requestData.get("endpoint")),
+                    identifier);
         } else if (requestData.get("requestBody").contains(".json")) {
             restManager.makeRequest(
-                    requestData.get("method"),
-                    requestData.get("endpoint"),
-                    JsonReader.getJsonStringFrom(requestData.get("requestBody"))
-            );
-            Context.setContext(ContextKeys.CURRENT_REQUEST, restManager.getStoredRequest());
-            System.out.printf("Context updated: [key:%s, value:%s]\n",
-                    ContextKeys.CURRENT_REQUEST, Context.getContextValue(ContextKeys.CURRENT_REQUEST));
+                    HttpMethod.valueOf(requestData.get("method")),
+                    Endpoint.valueOf(requestData.get("endpoint")),
+                    identifier,
+                    JsonUtil.getJsonFileByName(requestData.get("requestBody")));
 
-            Context.setContext(ContextKeys.CURRENT_RESPONSE, restManager.getStoredResponse());
-            System.out.printf("Context updated: [key:%s, value:%s]\n",
-                    ContextKeys.CURRENT_RESPONSE, Context.getContextValue(ContextKeys.CURRENT_RESPONSE));
-
-            System.out.println(" >>>>>>>> Request data:");
-            restManager.printStoredRequest();
-            System.out.println(" <<<<<<<< Response data:");
-            restManager.printStoredResponse();
         }
+        restManager.saveRequestResponseContext();
     }
 
     @Then("the response status is {int}")
     public void theResponseStatusIs(int responseCode) {
-        System.out.println("\nRunning step: the response status is " + responseCode);
-        Response response = (Response)Context.getContextValue(ContextKeys.CURRENT_RESPONSE);
-        Assert.assertEquals(responseCode, response.statusCode());
+        log.info("Running step: the response status is " + responseCode);
+        Response response = (Response) Context.getContextValue(ContextKey.CURRENT_RESPONSE);
+        assertThat(response.statusCode()).as("Response status is not matching!").isEqualTo(responseCode);
     }
 }

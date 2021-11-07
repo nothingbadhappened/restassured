@@ -1,6 +1,6 @@
-package util;
+package enums;
 
-public enum ContextKeys {
+public enum ContextKey {
     BASE_URL,
     CURRENT_REQUEST,
     CURRENT_RESPONSE,

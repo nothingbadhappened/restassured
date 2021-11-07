@@ -1,17 +1,19 @@
 Feature: API TEST SANDBOX
 
   Background: The user sets the base API URL
-    Given the user sets the base API URL to "https://reqres.in/api"
-    And the user gets the auth token
+    Given the user gets the auth token
 
   Scenario Outline: The user is able to perform request and validate response code
     Given the user sends the request with the following data:
     | method        | <method>        |
     | endpoint      | <endpoint>      |
+    | id            | <id>            |
     | requestBody   | <requestBody>   |
     Then the response status is <responseCode>
 
     Examples:
-    | method        |  endpoint       |  requestBody    | responseCode |
-    | GET           |  USERS          |  EMPTY          | 200          |
-    | GET           |  users/23       |  EMPTY          | 404          |
+    # "id" and "requestBody" are optional
+    | method        |  endpoint   | id    |  requestBody    | responseCode |
+    | POST          |  LOGIN      |       |  login.json     | 200          |
+    | GET           |  USERS      | 2     |                 | 200          |
+    | GET           |  USERS      | 23    |                 | 404          |
