@@ -3,7 +3,6 @@ package util;
 import enums.ContextKey;
 import enums.Endpoint;
 import enums.HttpMethod;
-import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.QueryableRequestSpecification;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 
 import static io.restassured.RestAssured.given;
 
@@ -156,15 +154,18 @@ public class RestManager {
     }
 
     public UserDTO getUser(long id) {
-        return requestSpecification.when()
-                .get()
-                .as(UserDTO.class);
-    }
-
-    public List<UserDTO> getUsers(long id) {
-        return requestSpecification.when()
-                .get()
-                .as(new TypeRef<List<UserDTO>>() {
-                });
+        requestSpecification = given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", Context.getContextValue(ContextKey.AUTH_TOKEN).toString())
+                .baseUri(Endpoint.BASE_URL.value)
+                .basePath(Endpoint.USERS.value + "/" + id);
+        response = given().log().all()
+                .header("Content-Type", "application/json")
+                .header("Authorization", Context.getContextValue(ContextKey.AUTH_TOKEN).toString())
+                .baseUri(Endpoint.BASE_URL.value)
+                .basePath(Endpoint.USERS.value + "/" + id)
+                .get();
+        saveRequestResponseContext();
+        return response.as(UserDTO.class);
     }
 }

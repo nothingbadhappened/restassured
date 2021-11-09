@@ -4,5 +4,6 @@ public enum ContextKey {
     BASE_URL,
     CURRENT_REQUEST,
     CURRENT_RESPONSE,
-    AUTH_TOKEN
+    AUTH_TOKEN,
+    USER
 }

@@ -1,22 +1,24 @@
 package stepdefs;
 
+import enums.ContextKey;
 import enums.Endpoint;
 import enums.HttpMethod;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-
+import models.userDto.UserDTO;
+import org.assertj.core.api.SoftAssertions;
 import util.Context;
-import enums.ContextKey;
 import util.JsonUtil;
 import util.RestManager;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Log4j2
 @AllArgsConstructor
@@ -77,5 +79,21 @@ public class RestSteps {
         log.info("Running step: the response status is " + responseCode);
         Response response = (Response) Context.getContextValue(ContextKey.CURRENT_RESPONSE);
         assertThat(response.statusCode()).as("Response status is not matching!").isEqualTo(responseCode);
+    }
+
+    @When("the user calls get user endpoint for user id {int}")
+    public void userCallsGetUsers(int id) {
+        Context.setContext(ContextKey.USER, restManager.getUser(id));
+    }
+
+    @Then("user data is returned")
+    public void userDataIsReturned() {
+        UserDTO userDTO = (UserDTO) Context.getContextValue(ContextKey.USER);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(userDTO.getData().getId()).as("User id is empty!").isNotNull();
+            softly.assertThat(userDTO.getData().getFirst_name()).as("User name is empty!").isNotEmpty();
+            softly.assertThat(userDTO.getData().getLast_name()).as("User last name is empty!").isNotEmpty();
+            softly.assertThat(userDTO.getData().getEmail()).as("User email is empty!").isNotEmpty();
+        });
     }
 }

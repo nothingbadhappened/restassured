@@ -17,3 +17,8 @@ Feature: API TEST SANDBOX
     | POST          |  LOGIN      |       |  login.json     | 200          |
     | GET           |  USERS      | 2     |                 | 200          |
     | GET           |  USERS      | 23    |                 | 404          |
+
+    Scenario: The user can fetch specific user details
+      Given the user calls get user endpoint for user id 2
+      Then user data is returned
+      And the response status is 200
